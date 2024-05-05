@@ -1,9 +1,0 @@
-{
-    "name": "Sum Up",
-    "image": "golang:latest",
-    "forwardPorts": [8080],
-    "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
-    },
-    "extensions": ["ms-vscode.cpptools"]
-}
