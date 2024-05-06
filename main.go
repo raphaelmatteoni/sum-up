@@ -96,7 +96,6 @@ func createBillAndItems(db *sql.DB) echo.HandlerFunc {
 		// Expressão regular para extrair nome e valor
 		re := regexp.MustCompile(`([a-zA-Z]+)\s*([0-9.]+)`)
 		matches := re.FindStringSubmatch(text)
-		log.Print(matches)
 
 		if len(matches) < 3 {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid format in text"})
@@ -109,11 +108,8 @@ func createBillAndItems(db *sql.DB) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid value format"})
 		}
 
-		bill := Bill{CreatedAt: time.Now()}
-		items := []Item{{Name: name, Value: value, BillID: bill.ID}}
-
-		// Inserir a Bill
-		row := db.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", bill.CreatedAt)
+		// Inserir a Bill e obter o ID
+		row := db.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
 		var billID int
 		err = row.Scan(&billID)
 		if err != nil {
@@ -122,15 +118,19 @@ func createBillAndItems(db *sql.DB) echo.HandlerFunc {
 
 		log.Printf("Inserted bill with ID: %d", billID)
 
+		// Agora que temos o billID, podemos inserir os Items associados
+		items := []Item{{Name: name, Value: value, BillID: billID}}
+
 		// Inserir os Items associados à Bill
 		for _, item := range items {
-			result, err := db.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, billID)
+			result, err := db.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, item.BillID)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to insert item"})
 			}
 
 			// Verificar se a inserção foi bem-sucedida
 			rowsAffected, err := result.RowsAffected()
+			log.Printf("Item rows affected: %d", rowsAffected)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to check rows affected"})
 			}
@@ -140,7 +140,14 @@ func createBillAndItems(db *sql.DB) echo.HandlerFunc {
 			}
 		}
 
-		return c.JSON(http.StatusCreated, bill)
+		// Construir a resposta com o ID da Bill e os Items associados
+		response := map[string]interface{}{
+			"id":        billID,
+			"createdAt": time.Now().Format(time.RFC3339),
+			"items":     items,
+		}
+
+		return c.JSON(http.StatusCreated, response)
 	}
 }
 
