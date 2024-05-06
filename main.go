@@ -103,34 +103,28 @@ func createBillAndItems(db *sql.DB) echo.HandlerFunc {
 		}
 
 		name := matches[1]
-		log.Print(name)
 		valueStr := matches[2]
-		log.Print(valueStr)
 		value, err := strconv.ParseFloat(valueStr, 64)
-		log.Print(value)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid value format"})
 		}
 
-		// Aqui você pode criar a Bill e os Items conforme necessário
-		// Exemplo:
 		bill := Bill{CreatedAt: time.Now()}
 		items := []Item{{Name: name, Value: value, BillID: bill.ID}}
 
 		// Inserir a Bill
-		result, err := db.Exec("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", bill.CreatedAt)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to insert bill"})
-		}
-
-		billID, err := result.LastInsertId()
+		row := db.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", bill.CreatedAt)
+		var billID int
+		err = row.Scan(&billID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get bill ID"})
 		}
 
+		log.Printf("Inserted bill with ID: %d", billID)
+
 		// Inserir os Items associados à Bill
 		for _, item := range items {
-			result, err = db.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, billID)
+			result, err := db.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, billID)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to insert item"})
 			}
