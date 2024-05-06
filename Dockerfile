@@ -11,7 +11,7 @@ COPY . .
 RUN go get -d -v ./...
 
 # Build the Go app
-RUN go build -o sumup .
+RUN go build -o sumup ./cmd/main.go
 
 #EXPOSE the port
 EXPOSE 8000
