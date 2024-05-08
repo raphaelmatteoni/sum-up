@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateBillAndItems(db *sql.DB) echo.HandlerFunc {
+func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// Tentar parsear o corpo da solicitação como JSON
 		var reqBody map[string]interface{}
@@ -42,7 +42,7 @@ func CreateBillAndItems(db *sql.DB) echo.HandlerFunc {
 		}
 
 		// Inserir a Bill e obter o ID
-		row := db.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
+		row := database.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
 		var billID int
 		err = row.Scan(&billID)
 		if err != nil {
@@ -56,7 +56,7 @@ func CreateBillAndItems(db *sql.DB) echo.HandlerFunc {
 
 		// Inserir os Items associados à Bill
 		for _, item := range items {
-			result, err := db.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, item.BillID)
+			result, err := database.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, item.BillID)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to insert item"})
 			}
@@ -84,18 +84,18 @@ func CreateBillAndItems(db *sql.DB) echo.HandlerFunc {
 	}
 }
 
-func GetBill(db *sql.DB) echo.HandlerFunc {
+func GetBill(database *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
 
 		var b models.Bill
-		err := db.QueryRow("SELECT * FROM bills WHERE id = $1", id).Scan(&b.ID, &b.CreatedAt)
+		err := database.QueryRow("SELECT * FROM bills WHERE id = $1", id).Scan(&b.ID, &b.CreatedAt)
 		if err != nil {
 			return c.JSON(http.StatusNotFound, nil)
 		}
 
 		// Obter os Items associados ao Bill
-		rows, err := db.Query("SELECT * FROM items WHERE bill_id = $1", id)
+		rows, err := database.Query("SELECT * FROM items WHERE bill_id = $1", id)
 		if err != nil {
 			return err
 		}
@@ -119,18 +119,18 @@ func GetBill(db *sql.DB) echo.HandlerFunc {
 	}
 }
 
-func DeleteBill(db *sql.DB) echo.HandlerFunc {
+func DeleteBill(database *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
 
 		// Primeiro, remover os Items associados ao Bill
-		_, err := db.Exec("DELETE FROM items WHERE bill_id = $1", id)
+		_, err := database.Exec("DELETE FROM items WHERE bill_id = $1", id)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, nil)
 		}
 
 		// Em seguida, remover o Bill
-		_, err = db.Exec("DELETE FROM bills WHERE id = $1", id)
+		_, err = database.Exec("DELETE FROM bills WHERE id = $1", id)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, nil)
 		}
