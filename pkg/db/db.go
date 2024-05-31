@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -12,7 +11,7 @@ type Database struct {
 }
 
 func NewDatabase() (*sql.DB, error) {
-	database, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	database, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=sumup sslmode=disable timezone=UTC connect_timeout=5")
 	if err != nil {
 		return nil, err
 	}
