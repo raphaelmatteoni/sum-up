@@ -29,6 +29,7 @@ func InitTables(database *sql.DB) error {
 	_, err := database.Exec(`
         CREATE TABLE IF NOT EXISTS bills (
             id SERIAL PRIMARY KEY,
+						name TEXT NOT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
     `)
@@ -37,13 +38,24 @@ func InitTables(database *sql.DB) error {
 	}
 
 	_, err = database.Exec(`
-        CREATE TABLE IF NOT EXISTS items (
-            id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            value FLOAT NOT NULL,
-            bill_id INTEGER REFERENCES bills(id)
-        )
-    `)
+	CREATE TABLE IF NOT EXISTS groups (
+		id SERIAL PRIMARY KEY,
+		name TEXT NOT NULL
+	)
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = database.Exec(`
+				CREATE TABLE IF NOT EXISTS items (
+						id SERIAL PRIMARY KEY,
+						name TEXT NOT NULL,
+						value FLOAT NOT NULL,
+						bill_id INTEGER REFERENCES bills(id)
+						group_id INTEGER REFERENCES groups(id)
+				)
+		`)
 	if err != nil {
 		return err
 	}
