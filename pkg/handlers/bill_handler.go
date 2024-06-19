@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"sumup/pkg/models"
 	"time"
 
@@ -14,37 +15,50 @@ import (
 
 func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// Tentar parsear o corpo da solicitação como JSON
 		var reqBody map[string]interface{}
 		if err := c.Bind(&reqBody); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to parse request body"})
 		}
 
-		// Verificar se a propriedade "text" existe no corpo da solicitação
 		text, ok := reqBody["text"].(string)
 		if !ok {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'text' property in request body"})
 		}
 
-		// Expressão regular para extrair nome e valor
-		re := regexp.MustCompile(`([a-zA-Z]+)\s*([0-9.]+)`)
-		matches := re.FindStringSubmatch(text)
+		// Substituir quebras de linha por ponto e vírgula
+		text = strings.ReplaceAll(text, "\n", ";")
 
-		if len(matches) < 3 {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid format in text"})
-		}
+		// Dividir o texto por ponto e vírgula para processar cada item individualmente
+		itemsText := strings.Split(text, ";")
 
-		name := matches[1]
-		valueStr := matches[2]
-		value, err := strconv.ParseFloat(valueStr, 64)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid value format"})
+		items := make([]models.Item, 0)
+		for _, itemText := range itemsText {
+			itemText = strings.TrimSpace(itemText) // Remover espaços em branco extras
+			if itemText == "" {                    // Ignorar linhas vazias
+				continue
+			}
+
+			re := regexp.MustCompile(`([a-zA-Z]+)\s*([0-9.]+)`)
+			matches := re.FindStringSubmatch(itemText)
+
+			if len(matches) < 3 {
+				return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid format in text"})
+			}
+
+			name := matches[1]
+			valueStr := matches[2]
+			value, err := strconv.ParseFloat(valueStr, 64)
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid value format"})
+			}
+
+			items = append(items, models.Item{Name: name, Value: value})
 		}
 
 		// Inserir a Bill e obter o ID
 		row := database.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
 		var billID int
-		err = row.Scan(&billID)
+		err := row.Scan(&billID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get bill ID"})
 		}
@@ -52,33 +66,25 @@ func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 		log.Printf("Inserted bill with ID: %d", billID)
 
 		// Agora que temos o billID, podemos inserir os Items associados
-		items := []models.Item{{Name: name, Value: value, BillID: billID}}
-
-		// Inserir os Items associados à Bill
-		for _, item := range items {
-			result, err := database.Exec("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3)", item.Name, item.Value, item.BillID)
+		for i := range items {
+			row := database.QueryRow("INSERT INTO items (name, value, bill_id) VALUES ($1, $2, $3) RETURNING id", items[i].Name, items[i].Value, billID)
+			var itemID int
+			err := row.Scan(&itemID)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to insert item"})
 			}
 
-			// Verificar se a inserção foi bem-sucedida
-			rowsAffected, err := result.RowsAffected()
-			log.Printf("Item rows affected: %d", rowsAffected)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to check rows affected"})
-			}
-
-			if rowsAffected == 0 {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to insert item"})
-			}
+			items[i].ID = itemID
+			items[i].BillID = billID
 		}
 
-		// Construir a resposta com o ID da Bill e os Items associados
 		response := map[string]interface{}{
 			"id":        billID,
 			"createdAt": time.Now().Format(time.RFC3339),
 			"items":     items,
 		}
+
+		log.Println(response)
 
 		return c.JSON(http.StatusCreated, response)
 	}
