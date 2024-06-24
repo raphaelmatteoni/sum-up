@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { createGroup, updateItem } from './api';
+
 
 function BillDetails({ items }) {
   const [selectedItems, setSelectedItems] = useState([]);
@@ -16,6 +18,20 @@ function BillDetails({ items }) {
 
     setSelectedItems(newSelectedItems);
   };
+
+  const handleGroupProceed = async () => {
+    const groupId = await createGroup(selectedItems);
+  
+    // Atualizando cada item selecionado com o groupId do novo grupo
+    selectedItems.forEach(async (itemId) => {
+      await updateItem(itemId, { group_id: groupId });
+    });
+  
+    // Limpar seleção e fechar o modal
+    setSelectedItems([]);
+    setShowModal(false);
+  };
+  
 
   const handleGroupButtonClick = () => {
     setShowModal(true);

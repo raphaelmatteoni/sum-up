@@ -30,7 +30,7 @@ function App() {
         )}
 
         {currentScreen === 'billDetails' && (
-          <BillDetails items={billData.items} />
+          <BillDetails items={billData.items.filter(item =>!item.groupId)} />
         )}
       </header>
     </div>
