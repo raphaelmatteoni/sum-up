@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 function BillDetails({ items }) {
   const [selectedItems, setSelectedItems] = useState([]);
+  const [showModal, setShowModal] = useState(false); // Estado para controlar a visibilidade do modal
 
   const handleCheckboxChange = (itemId) => {
     const currentIndex = selectedItems.indexOf(itemId);
@@ -14,6 +15,10 @@ function BillDetails({ items }) {
     }
 
     setSelectedItems(newSelectedItems);
+  };
+
+  const handleGroupButtonClick = () => {
+    setShowModal(true);
   };
 
   return (
@@ -34,6 +39,20 @@ function BillDetails({ items }) {
           </div>
         </div>
       ))}
+
+      {/* Botão Agrupar */}
+      <button onClick={handleGroupButtonClick}>Agrupar</button>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Agrupar itens</h2>
+            <input type="text" placeholder="Nome do grupo" />
+            <button onClick={() => handleGroupProceed()}>Prosseguir</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

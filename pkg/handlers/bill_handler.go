@@ -144,3 +144,36 @@ func DeleteBill(database *sql.DB) echo.HandlerFunc {
 		return c.JSON(http.StatusOK, "Bill and its items deleted")
 	}
 }
+
+func CreateGroup(database *sql.DB) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var reqBody map[string]interface{}
+		if err := c.Bind(&reqBody); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to parse request body"})
+		}
+
+		text, ok := reqBody["group_name"].(string)
+		if !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'group_name' property in request body"})
+		}
+
+		row := database.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
+		var groupID int
+		err := row.Scan(&groupID)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get group ID"})
+		}
+
+		log.Printf("Inserted group with ID: %d", groupID)
+
+		response := map[string]interface{}{
+			"id":        groupID,
+			"createdAt": time.Now().Format(time.RFC3339),
+			"name":      text,
+		}
+
+		log.Println(response)
+
+		return c.JSON(http.StatusCreated, response)
+	}
+}
