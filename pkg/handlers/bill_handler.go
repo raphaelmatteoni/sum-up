@@ -157,7 +157,7 @@ func CreateGroup(database *sql.DB) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'group_name' property in request body"})
 		}
 
-		row := database.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
+		row := database.QueryRow("INSERT INTO groups (name) VALUES ($1) RETURNING id", text)
 		var groupID int
 		err := row.Scan(&groupID)
 		if err != nil {
@@ -167,9 +167,8 @@ func CreateGroup(database *sql.DB) echo.HandlerFunc {
 		log.Printf("Inserted group with ID: %d", groupID)
 
 		response := map[string]interface{}{
-			"id":        groupID,
-			"createdAt": time.Now().Format(time.RFC3339),
-			"name":      text,
+			"id":   groupID,
+			"name": text,
 		}
 
 		log.Println(response)
