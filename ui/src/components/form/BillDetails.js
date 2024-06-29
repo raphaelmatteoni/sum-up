@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { createGroup, updateItem } from './api';
+import { createGroup, updateItem } from './../../services/api';
+import Button from './Button';
+
 
 
 function BillDetails({ items }) {
@@ -22,12 +24,10 @@ function BillDetails({ items }) {
   const handleGroupProceed = async () => {
     const groupId = await createGroup(selectedItems);
   
-    // Atualizando cada item selecionado com o groupId do novo grupo
     selectedItems.forEach(async (itemId) => {
       await updateItem(itemId, { group_id: groupId });
     });
   
-    // Limpar seleção e fechar o modal
     setSelectedItems([]);
     setShowModal(false);
   };
@@ -57,15 +57,37 @@ function BillDetails({ items }) {
       ))}
 
       {/* Botão Agrupar */}
-      <button onClick={handleGroupButtonClick}>Agrupar</button>
+      <Button
+        onClick={handleGroupButtonClick}
+      >
+        Agrupar
+      </Button>
 
       {/* Modal */}
       {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Agrupar itens</h2>
-            <input type="text" placeholder="Nome do grupo" />
-            <button onClick={() => handleGroupProceed()}>Prosseguir</button>
+        <div className="modal flex items-center justify-center fixed z-40 inset-0 h-full p-10">
+          <button type="button" className="modal-backdrop cursor-default w-full h-full fixed inset-0 bg-gray-700 bg-opacity-25" tabIndex="-1"></button>
+          <div className="modal-window w-10/12 overflow-hidden relative bg-slate-200 shadow-lg rounded-xl border border-gray-400 p-10">
+
+          <h3 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Nome do grupo</h3>
+          <button
+            className="absolute top-0 right-0 mt-4 mr-4 text-gray-800 hover:text-gray-700 focus:outline-none hover:text-red-500"
+            onClick={() => setShowModal(false)}
+          >
+            X
+          </button>
+
+          <input className="mt-6 shadow appearance-none border border-gray-300 text-gray-600 placeholder-gray-400
+          rounded w-full py-2 px-3 bg-white focus:outline-none focus:ring-0 focus:border-blue-500
+          leading-6 transition-colors duration-200 ease-in-out" type="text" placeholder="Nome do grupo" />
+
+          <div className="flex flex-col items-center">
+            <Button 
+              onClick={handleGroupProceed}
+            >
+              Prosseguir
+            </Button>
+          </div>
           </div>
         </div>
       )}

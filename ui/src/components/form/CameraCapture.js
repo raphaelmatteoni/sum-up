@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { createWorker } from 'tesseract.js';
+import Button from './Button';
+
 
 const CameraCapture = () => {
   const videoRef = useRef();
@@ -49,12 +51,12 @@ const CameraCapture = () => {
 
   return (
     <div className="w-full flex flex-col items-center space-y-2">
-      <button
+      <Button
         className="bg-blue-500 text-white px-3 py-1 rounded-md text-base hover:bg-blue-700 w-full"
         onClick={() => setIsCameraOn(!isCameraOn)}
       >
         {isCameraOn ? 'Parar Câmera' : 'Iniciar Câmera'}
-      </button>
+      </Button>
       {isCameraOn && (
         <>
           <video ref={videoRef} autoPlay onClick={handleTakePhoto} className="w-full h-auto mt-2"></video>

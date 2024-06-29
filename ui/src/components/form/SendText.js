@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Button from './Button';
 
 function SendText({ onSubmit }) {
   const [text, setText] = useState('');
@@ -33,12 +34,11 @@ function SendText({ onSubmit }) {
         placeholder="Digite seu texto aqui..."
         className="w-full p-2 border rounded h-32 resize-none text-black"
       />
-      <button
+      <Button
         onClick={handleSend}
-        className="bg-blue-500 text-white px-3 py-1 rounded-md text-base hover:bg-blue-700 w-full"
       >
         Enviar
-      </button>
+      </Button>
     </div>
   );
 }
