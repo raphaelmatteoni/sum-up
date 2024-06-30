@@ -57,18 +57,15 @@ function BillDetails() {
     const groupId = await createGroup(groupName, id);
 
     selectedItems.forEach(async (item) => {
-      await updateItem(item.id, { group_id: groupId }); // Atualiza usando item.id
+      await updateItem(item.id, { group_id: groupId });
     });
 
-    // Atualiza o estado dos itens removendo os itens agrupados
     const remainingItems = items.filter(item =>!selectedItems.some(selectedItem => selectedItem.id === item.id)); // Compara objetos
     setItems(remainingItems);
 
-    // Cria um novo grupo com o groupId, nome e itens selecionados
     const newGroup = { id: groupId, name: groupName, items: selectedItems };
     setGroups(prevGroups => [...prevGroups, newGroup]);
 
-    // Limpa o nome do grupo e fecha o modal
     setSelectedItems([]);
     setGroupName('');
     setShowModal(false);
@@ -100,7 +97,6 @@ function BillDetails() {
             </div>
           ))}
     
-          {/* Botão Agrupar */}
           <Button
             onClick={handleGroupButtonClick}
           >
@@ -131,7 +127,6 @@ function BillDetails() {
         })}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal flex items-center justify-center fixed z-40 inset-0 h-full p-10">
           <button type="button" className="modal-backdrop cursor-default w-full h-full fixed inset-0 bg-gray-700 bg-opacity-25" tabIndex="-1"></button>
