@@ -179,3 +179,29 @@ func CreateGroup(database *sql.DB) echo.HandlerFunc {
 		return c.JSON(http.StatusCreated, response)
 	}
 }
+
+func UpdateItemGroupID(database *sql.DB) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id := c.Param("id")
+		log.Println("Item ID:", id) // Log do ID do item
+
+		var updates map[string]interface{}
+		if err := c.Bind(&updates); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to parse request body"})
+		}
+
+		groupId, ok := updates["group_id"]
+		if !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'group_id' in request body"})
+		}
+
+		log.Println("Group ID:", groupId) // Log do Group ID recebido
+
+		_, err := database.Exec("UPDATE items SET group_id = $1 WHERE id = $2", groupId, id)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, nil)
+		}
+
+		return c.JSON(http.StatusOK, "Item grouped successfully")
+	}
+}

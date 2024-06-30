@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
-import { createGroup, updateItem } from './../../services/api';
-import Button from './Button';
+import { createGroup, updateItem, getBill } from '../../services/api';
+import Button from '../../components/Button/Button';
+import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
-
-
-function BillDetails({ items }) {
+function BillDetails() {
+  const { id } = useParams();
+  const [items, setItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [showModal, setShowModal] = useState(false); // Estado para controlar a visibilidade do modal
+  const [showModal, setShowModal] = useState(false);
+  const [groupName, setGroupName] = useState('');
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const bill = await getBill(id);
+        setItems(bill.items);
+      } catch (error) {
+        console.error('Erro ao buscar itens:', error);
+      }
+    };
+
+    fetchItems();
+  }, [id]);
 
   const handleCheckboxChange = (itemId) => {
     const currentIndex = selectedItems.indexOf(itemId);
@@ -22,13 +38,16 @@ function BillDetails({ items }) {
   };
 
   const handleGroupProceed = async () => {
-    const groupId = await createGroup(selectedItems);
-  
+    const groupId = await createGroup(groupName);
+
+    console.log(groupId);
+
     selectedItems.forEach(async (itemId) => {
       await updateItem(itemId, { group_id: groupId });
     });
-  
-    setSelectedItems([]);
+
+    const remainingItems = items.filter(item =>!selectedItems.includes(item.id));
+    setItems(remainingItems);
     setShowModal(false);
   };
   
@@ -77,9 +96,14 @@ function BillDetails({ items }) {
             X
           </button>
 
-          <input className="mt-6 shadow appearance-none border border-gray-300 text-gray-600 placeholder-gray-400
+          <input
+            className="mt-6 shadow appearance-none border border-gray-300 text-gray-600 placeholder-gray-400
           rounded w-full py-2 px-3 bg-white focus:outline-none focus:ring-0 focus:border-blue-500
-          leading-6 transition-colors duration-200 ease-in-out" type="text" placeholder="Nome do grupo" />
+          leading-6 transition-colors duration-200 ease-in-out"
+            type="text"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="Nome do grupo" />
 
           <div className="flex flex-col items-center">
             <Button 

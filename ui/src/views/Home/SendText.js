@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import Button from './Button';
+import Button from '../../components/Button/Button';
+import { useNavigate } from 'react-router-dom';
 
-function SendText({ onSubmit }) {
+function SendText() {
+  const navigate = useNavigate();
   const [text, setText] = useState('');
 
   const handleSend = async () => {
@@ -19,8 +21,8 @@ function SendText({ onSubmit }) {
       }
 
       const data = await response.json();
-      onSubmit(data);
       console.log('Resposta do servidor:', data);
+      navigate(`/bill-details/${data.id}`);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
     }
@@ -29,16 +31,12 @@ function SendText({ onSubmit }) {
   return (
     <div className="flex flex-col space-y-2 w-full">
       <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
+        value={text} // Define o valor do textarea para o estado do texto
+        onChange={(e) => setText(e.target.value)} // Atualiza o estado do texto sempre que o valor do textarea muda
         placeholder="Digite seu texto aqui..."
         className="w-full p-2 border rounded h-32 resize-none text-black"
       />
-      <Button
-        onClick={handleSend}
-      >
-        Enviar
-      </Button>
+      <Button onClick={handleSend}>Enviar</Button> // Corrigido para usar a função handleSend
     </div>
   );
 }

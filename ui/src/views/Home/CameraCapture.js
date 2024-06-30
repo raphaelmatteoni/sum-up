@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { createWorker } from 'tesseract.js';
-import Button from './Button';
-
+import Button from '../../components/Button/Button';
 
 const CameraCapture = () => {
   const videoRef = useRef();
