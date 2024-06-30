@@ -12,4 +12,5 @@ func InitRoutes(e *echo.Echo, database *sql.DB) {
 	e.DELETE("/bills/:id", DeleteBill(database))
 	e.POST("/groups", CreateGroup(database))
 	e.PUT("/items/:id", UpdateItemGroupID(database))
+	e.GET("/groups/:bill_id", GetGroupsByBillID(database))
 }

@@ -92,7 +92,6 @@ func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 func GetBill(database *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
-		log.Println("ID:", id) // Log do ID recebido
 
 		var b models.Bill
 		err := database.QueryRow("SELECT * FROM bills WHERE id = $1", id).Scan(&b.ID, &b.CreatedAt)
@@ -210,5 +209,56 @@ func UpdateItemGroupID(database *sql.DB) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, "Item grouped successfully")
+	}
+}
+
+func GetGroupsByBillID(database *sql.DB) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		billIDStr := c.Param("bill_id")
+		billID, err := strconv.Atoi(billIDStr)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid bill ID format"})
+		}
+
+		groups := []models.Group{}
+		rows, err := database.Query("SELECT * FROM groups WHERE bill_id = $1", billID)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, nil)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var group models.Group
+			if err := rows.Scan(&group.ID, &group.Name, &group.BillID); err != nil {
+				return c.JSON(http.StatusInternalServerError, nil)
+			}
+
+			// Integra a lógica de GetItemsByGroupID diretamente aqui
+			items := []models.Item{}
+			itemRows, err := database.Query("SELECT * FROM items WHERE group_id = $1", group.ID)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, nil)
+			}
+			defer itemRows.Close()
+
+			for itemRows.Next() {
+				var item models.Item
+				if err := itemRows.Scan(&item.ID, &item.Name, &item.Value, &item.GroupID, &item.BillID); err != nil {
+					return c.JSON(http.StatusInternalServerError, nil)
+				}
+				items = append(items, item)
+			}
+			if err := itemRows.Err(); err != nil {
+				return c.JSON(http.StatusInternalServerError, nil)
+			}
+
+			group.Items = items
+			groups = append(groups, group)
+		}
+		if err := rows.Err(); err != nil {
+			return c.JSON(http.StatusInternalServerError, nil)
+		}
+
+		return c.JSON(http.StatusOK, groups)
 	}
 }
