@@ -48,6 +48,7 @@ function BillDetails() {
 
     const remainingItems = items.filter(item =>!selectedItems.includes(item.id));
     setItems(remainingItems);
+    setGroupName('');
     setShowModal(false);
   };
   
