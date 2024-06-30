@@ -38,9 +38,7 @@ function BillDetails() {
   };
 
   const handleGroupProceed = async () => {
-    const groupId = await createGroup(groupName);
-
-    console.log(groupId);
+    const groupId = await createGroup(groupName, id);
 
     selectedItems.forEach(async (itemId) => {
       await updateItem(itemId, { group_id: groupId });

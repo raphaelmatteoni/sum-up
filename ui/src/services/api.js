@@ -1,4 +1,4 @@
-async function createGroup(groupName) {
+async function createGroup(groupName, billID) {
   try {
     const response = await fetch('http://localhost:8000/groups', {
       method: 'POST',
@@ -7,6 +7,7 @@ async function createGroup(groupName) {
       },
       body: JSON.stringify({
         group_name: groupName,
+        bill_id: billID
       }),
     });
 

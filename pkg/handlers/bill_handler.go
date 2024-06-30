@@ -46,6 +46,7 @@ func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 			name := matches[1]
 			valueStr := matches[2]
 			value, err := strconv.ParseFloat(valueStr, 64)
+
 			if err != nil {
 				return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid value format"})
 			}
@@ -53,10 +54,10 @@ func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 			items = append(items, models.Item{Name: name, Value: value})
 		}
 
-		// Inserir a Bill e obter o ID
 		row := database.QueryRow("INSERT INTO bills (created_at) VALUES ($1) RETURNING id", time.Now())
 		var billID int
 		err := row.Scan(&billID)
+
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get bill ID"})
 		}
@@ -155,12 +156,17 @@ func CreateGroup(database *sql.DB) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Failed to parse request body"})
 		}
 
-		text, ok := reqBody["group_name"].(string)
+		groupName, ok := reqBody["group_name"].(string)
 		if !ok {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'group_name' property in request body"})
 		}
 
-		row := database.QueryRow("INSERT INTO groups (name) VALUES ($1) RETURNING id", text)
+		billID, ok := reqBody["bill_id"].(string)
+		if !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'bill_id' property in request body"})
+		}
+
+		row := database.QueryRow("INSERT INTO groups (name, bill_id) VALUES ($1, $2) RETURNING id", groupName, billID)
 		var groupID int
 		err := row.Scan(&groupID)
 		if err != nil {
@@ -170,8 +176,9 @@ func CreateGroup(database *sql.DB) echo.HandlerFunc {
 		log.Printf("Inserted group with ID: %d", groupID)
 
 		response := map[string]interface{}{
-			"id":   groupID,
-			"name": text,
+			"id":      groupID,
+			"name":    groupName,
+			"bill_id": billID,
 		}
 
 		log.Println(response)
