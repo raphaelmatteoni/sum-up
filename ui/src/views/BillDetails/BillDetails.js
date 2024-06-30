@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createGroup, updateItem, getBill } from '../../services/api';
+import { createGroup, updateItem, getBill, getGroupsByBillId } from '../../services/api';
 import Button from '../../components/Button/Button';
 import { useParams } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -23,6 +23,20 @@ function BillDetails() {
     };
 
     fetchItems();
+  }, [id]);
+
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const groups = await getGroupsByBillId(id);
+        setGroups(groups);
+      } catch (error) {
+        console.error('Erro ao buscar grupos:', error);
+      }
+    };
+
+    fetchGroups();
   }, [id]);
 
   const handleCheckboxChange = (itemId) => {
@@ -55,6 +69,7 @@ function BillDetails() {
     setGroups(prevGroups => [...prevGroups, newGroup]);
 
     // Limpa o nome do grupo e fecha o modal
+    setSelectedItems([]);
     setGroupName('');
     setShowModal(false);
   };
@@ -65,7 +80,7 @@ function BillDetails() {
   };
 
   return (
-    <div>
+    <div className="w-full">
       <h1>Detalhes da conta</h1>
       {items.map((item) => (
         <div key={item.id} className="m-2 w-full">
@@ -90,18 +105,28 @@ function BillDetails() {
         Agrupar
       </Button>
 
-      {/* Grupos */}
-      {groups.map((group) => (
-        <div key={group.id}>
-          <h2>{group.name}</h2>
-          {group.items.map((item) => (
-            <div key={item.id} className="m-2 w-full">
-              <span className="mr-2">{item.name}</span>
-              <span>R${item.value}</span>
-            </div>
-          ))}
+      <div className="mt-3 w-full">
+  <h2>Grupos</h2>
+  {groups.map((group) => {
+    const totalValue = group.items.reduce((acc, item) => acc + item.value, 0);
+
+    return (
+      <div className="mt-3 w-full bg-slate-300 text-black rounded-lg p-2" key={group.id}>
+        <h2>{group.name}</h2>
+        {group.items.map((item) => (
+          <div key={item.id} className="m-2 w-full">
+            <span className="mr-2">{item.name}</span>
+            <span>R${item.value}</span>
+          </div>
+        ))}
+        <div className="m-2 w-full">
+          <strong>Total do Grupo: R${totalValue.toFixed(2)}</strong>
         </div>
-      ))}
+      </div>
+    );
+  })}
+</div>
+
 
       {/* Modal */}
       {showModal && (
