@@ -36,7 +36,7 @@ function SendText() {
         placeholder="Digite seu texto aqui..."
         className="w-full p-2 border rounded h-32 resize-none text-black"
       />
-      <Button onClick={handleSend}>Enviar</Button> // Corrigido para usar a função handleSend
+      <Button onClick={handleSend}>Enviar</Button>
     </div>
   );
 }

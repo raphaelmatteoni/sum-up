@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createGroup, updateItem, getBill } from '../../services/api';
 import Button from '../../components/Button/Button';
 import { useParams } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 function BillDetails() {
   const { id } = useParams();
   const [items, setItems] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -25,11 +26,12 @@ function BillDetails() {
   }, [id]);
 
   const handleCheckboxChange = (itemId) => {
-    const currentIndex = selectedItems.indexOf(itemId);
+    const item = items.find(item => item.id === itemId);
+    const currentIndex = selectedItems.findIndex(selectedItem => selectedItem.id === item.id);
     const newSelectedItems = [...selectedItems];
 
     if (currentIndex === -1) {
-      newSelectedItems.push(itemId);
+      newSelectedItems.push(item);
     } else {
       newSelectedItems.splice(currentIndex, 1);
     }
@@ -40,16 +42,23 @@ function BillDetails() {
   const handleGroupProceed = async () => {
     const groupId = await createGroup(groupName, id);
 
-    selectedItems.forEach(async (itemId) => {
-      await updateItem(itemId, { group_id: groupId });
+    selectedItems.forEach(async (item) => {
+      await updateItem(item.id, { group_id: groupId }); // Atualiza usando item.id
     });
 
-    const remainingItems = items.filter(item =>!selectedItems.includes(item.id));
+    // Atualiza o estado dos itens removendo os itens agrupados
+    const remainingItems = items.filter(item =>!selectedItems.some(selectedItem => selectedItem.id === item.id)); // Compara objetos
     setItems(remainingItems);
+
+    // Cria um novo grupo com o groupId, nome e itens selecionados
+    const newGroup = { id: groupId, name: groupName, items: selectedItems };
+    setGroups(prevGroups => [...prevGroups, newGroup]);
+
+    // Limpa o nome do grupo e fecha o modal
     setGroupName('');
     setShowModal(false);
   };
-  
+
 
   const handleGroupButtonClick = () => {
     setShowModal(true);
@@ -65,7 +74,7 @@ function BillDetails() {
               type="checkbox"
               id={`item-${item.id}`}
               className="mr-2"
-              checked={selectedItems.includes(item.id)}
+              checked={selectedItems.some(selectedItem => selectedItem.id === item.id)}
               onChange={() => handleCheckboxChange(item.id)}
             />
             <span className="mr-2">{item.name}</span>
@@ -80,6 +89,19 @@ function BillDetails() {
       >
         Agrupar
       </Button>
+
+      {/* Grupos */}
+      {groups.map((group) => (
+        <div key={group.id}>
+          <h2>{group.name}</h2>
+          {group.items.map((item) => (
+            <div key={item.id} className="m-2 w-full">
+              <span className="mr-2">{item.name}</span>
+              <span>R${item.value}</span>
+            </div>
+          ))}
+        </div>
+      ))}
 
       {/* Modal */}
       {showModal && (
