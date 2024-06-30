@@ -25,16 +25,14 @@ func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing 'text' property in request body"})
 		}
 
-		// Substituir quebras de linha por ponto e vírgula
 		text = strings.ReplaceAll(text, "\n", ";")
 
-		// Dividir o texto por ponto e vírgula para processar cada item individualmente
 		itemsText := strings.Split(text, ";")
 
 		items := make([]models.Item, 0)
 		for _, itemText := range itemsText {
-			itemText = strings.TrimSpace(itemText) // Remover espaços em branco extras
-			if itemText == "" {                    // Ignorar linhas vazias
+			itemText = strings.TrimSpace(itemText)
+			if itemText == "" {
 				continue
 			}
 
@@ -93,16 +91,19 @@ func CreateBillAndItems(database *sql.DB) echo.HandlerFunc {
 func GetBill(database *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id := c.Param("id")
+		log.Println("ID:", id) // Log do ID recebido
 
 		var b models.Bill
 		err := database.QueryRow("SELECT * FROM bills WHERE id = $1", id).Scan(&b.ID, &b.CreatedAt)
 		if err != nil {
-			return c.JSON(http.StatusNotFound, nil)
+			log.Println("Error fetching bill:", err) // Log do erro
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch bill"})
 		}
 
 		// Obter os Items associados ao Bill
-		rows, err := database.Query("SELECT * FROM items WHERE bill_id = $1", id)
+		rows, err := database.Query("SELECT * FROM items WHERE bill_id = $1 AND group_id IS NULL", id)
 		if err != nil {
+			log.Println("Error querying items:", err) // Log do erro
 			return err
 		}
 		defer rows.Close()
@@ -110,12 +111,14 @@ func GetBill(database *sql.DB) echo.HandlerFunc {
 		items := []models.Item{}
 		for rows.Next() {
 			var i models.Item
-			if err := rows.Scan(&i.ID, &i.Name, &i.Value, &i.BillID); err != nil {
+			if err := rows.Scan(&i.ID, &i.Name, &i.Value, &i.BillID, &i.GroupID); err != nil {
+				log.Println("Error scanning item:", err) // Log do erro
 				return err
 			}
 			items = append(items, i)
 		}
 		if err := rows.Err(); err != nil {
+			log.Println("Error iterating over rows:", err) // Log do erro
 			return err
 		}
 

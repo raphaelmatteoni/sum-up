@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
 	// Connect to database
 	database, err := db.NewDatabase()
