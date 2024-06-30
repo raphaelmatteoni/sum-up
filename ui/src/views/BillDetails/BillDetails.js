@@ -80,53 +80,56 @@ function BillDetails() {
   };
 
   return (
-    <div className="w-full">
-      <h1>Detalhes da conta</h1>
-      {items.map((item) => (
-        <div key={item.id} className="m-2 w-full">
-          <div className="m-2">
-            <input
-              type="checkbox"
-              id={`item-${item.id}`}
-              className="mr-2"
-              checked={selectedItems.some(selectedItem => selectedItem.id === item.id)}
-              onChange={() => handleCheckboxChange(item.id)}
-            />
-            <span className="mr-2">{item.name}</span>
-            <span>R${item.value}</span>
-          </div>
-        </div>
-      ))}
-
-      {/* Botão Agrupar */}
-      <Button
-        onClick={handleGroupButtonClick}
-      >
-        Agrupar
-      </Button>
+    <>
+      {items.length > 0 ? (
+        <>
+          <h1>Detalhes da conta</h1>
+          {items.map((item) => (
+            <div key={item.id} className="m-2 w-full">
+              <div className="m-2">
+                <input
+                  type="checkbox"
+                  id={`item-${item.id}`}
+                  className="mr-2"
+                  checked={selectedItems.some(selectedItem => selectedItem.id === item.id)}
+                  onChange={() => handleCheckboxChange(item.id)}
+                />
+                <span className="mr-2">{item.name}</span>
+                <span>R${item.value}</span>
+              </div>
+            </div>
+          ))}
+    
+          {/* Botão Agrupar */}
+          <Button
+            onClick={handleGroupButtonClick}
+          >
+            Agrupar
+          </Button>
+        </> 
+      ) : null}
 
       <div className="mt-3 w-full">
-  <h2>Grupos</h2>
-  {groups.map((group) => {
-    const totalValue = group.items.reduce((acc, item) => acc + item.value, 0);
+        <h2>Grupos</h2>
+        {groups.map((group) => {
+          const totalValue = group.items.reduce((acc, item) => acc + item.value, 0);
 
-    return (
-      <div className="mt-3 w-full bg-slate-300 text-black rounded-lg p-2" key={group.id}>
-        <h2>{group.name}</h2>
-        {group.items.map((item) => (
-          <div key={item.id} className="m-2 w-full">
-            <span className="mr-2">{item.name}</span>
-            <span>R${item.value}</span>
-          </div>
-        ))}
-        <div className="m-2 w-full">
-          <strong>Total do Grupo: R${totalValue.toFixed(2)}</strong>
-        </div>
+          return (
+            <div className="mt-3 w-full bg-slate-300 text-black rounded-lg p-2" key={group.id}>
+              <h2>{group.name}</h2>
+              {group.items.map((item) => (
+                <div key={item.id} className="m-2 w-full">
+                  <span className="mr-2">{item.name}</span>
+                  <span>R${item.value}</span>
+                </div>
+              ))}
+              <div className="m-2 w-full">
+                <strong>Total do Grupo: R${totalValue.toFixed(2)}</strong>
+              </div>
+            </div>
+          );
+        })}
       </div>
-    );
-  })}
-</div>
-
 
       {/* Modal */}
       {showModal && (
@@ -161,7 +164,7 @@ function BillDetails() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
