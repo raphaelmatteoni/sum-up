@@ -13,7 +13,9 @@ function BillDetails() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [groupName, setGroupName] = useState('');
-  // const [taxRate, setTaxRate] = useState(0);
+  const [taxRate, setTaxRate] = useState(0);
+  const [showTaxModal, setShowTaxModal] = useState(false);
+
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -74,6 +76,18 @@ function BillDetails() {
     setShowModal(false);
   };
 
+  const applyTaxRate = () => {
+    const updatedGroups = groups.map(group => {
+      const totalValue = group.items.reduce((acc, item) => acc + item.value, 0);
+      const totalWithTax = (totalValue * (1 + taxRate / 100)).toFixed(2);
+      return {
+       ...group,
+        totalWithTax,
+      };
+    });
+    setGroups(updatedGroups);
+    setShowTaxModal(false);
+  };
 
   const handleGroupButtonClick = () => {
     setShowModal(true);
@@ -123,11 +137,13 @@ function BillDetails() {
                 </div>
               ))}
               <div className="m-2 w-full">
-                <strong>Total do Grupo: R${totalValue.toFixed(2)}</strong>
+                <strong>Total do Grupo: R${group.totalWithTax? group.totalWithTax : totalValue.toFixed(2)}</strong>
               </div>
             </div>
           );
         })}
+        
+        <Button onClick={() => setShowTaxModal(true)} className="mt-4">Aplicar taxa de serviço</Button>
       </div>
 
       {showModal && (
@@ -142,6 +158,21 @@ function BillDetails() {
           </div>
         </Modal>
       )}
+
+      {showTaxModal && (
+        <Modal isOpen={showTaxModal} onClose={() => setShowTaxModal(false)} title="Definir Taxa">
+          <Input
+            placeholder="Taxa (%)"
+            value={taxRate}
+            onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+            type="number"
+          />
+          <div className="flex flex-col items-center mt-6">
+            <Button onClick={() => applyTaxRate()}>Salvar</Button>
+          </div>
+        </Modal>
+      )}
+
     </>
   );
 }
