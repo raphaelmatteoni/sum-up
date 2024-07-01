@@ -123,7 +123,10 @@ function BillDetails() {
       ) : null}
 
       <div className="mt-3 w-full">
-        <h2>Grupos</h2>
+        {groups.length > 0 && (
+          <h2>Grupos</h2>
+        )}
+
         {groups.map((group) => {
           const totalValue = group.items.reduce((acc, item) => acc + item.value, 0);
 
@@ -143,7 +146,9 @@ function BillDetails() {
           );
         })}
         
-        <Button onClick={() => setShowTaxModal(true)} className="mt-4">Aplicar taxa de serviço</Button>
+        {items.length === 0 && (
+          <Button onClick={() => setShowTaxModal(true)} className="mt-4">Aplicar taxa de serviço</Button>
+        )}
       </div>
 
       {showModal && (
