@@ -44,6 +44,27 @@ async function updateItem(itemId, updates) {
   }
 }
 
+async function createBill(text) {
+  try {
+    const response = await fetch('http://localhost:8000/bills', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: text }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating bill:', error);
+    throw error;
+  }
+}
+
 async function getBill(Id) {
   try {
     const response = await fetch(`http://localhost:8000/bills/${Id}`, {
@@ -84,4 +105,4 @@ async function getGroupsByBillId(billId) {
   }
 }
 
-export { createGroup, updateItem, getBill, getGroupsByBillId };
+export { createGroup, updateItem, getBill, getGroupsByBillId, createBill };
